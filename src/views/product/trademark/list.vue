@@ -16,8 +16,8 @@
             :before-upload="beforeAvatarUpload"
           >
             <img
-              v-if="brandForm.logoUrl"
-              :src="brandForm.logoUrl"
+              v-if="brandForm.logoUrl || isEditingBrand.logoUrl"
+              :src="isEditing ? isEditingBrand.logoUrl : brandForm.logoUrl"
               class="avatar"
             />
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
@@ -89,7 +89,7 @@ export default {
       },
       isAdding: false,
       isEditing: false,
-      updateId: 0,
+      isEditingBrand: {},
       rules: {
         logoUrl: [{ required: true, message: "请上传品牌LOGO！" }],
         tmName: [
@@ -147,6 +147,20 @@ export default {
     //提交添加品牌表单
     submitForm(formName) {
       this.$refs[formName].validate(async (valid) => {
+        if (brandForm.logoUrl || isEditingBrand.logoUrl) {
+          if (this.isEditing) {
+            const result = await this.$API.brands.updateBrand({
+              ...this.brandForm,
+              id: this.isEditingBrand.id,
+            });
+            if (result.code === 200) {
+              this.$message.success("修改品牌数据成功");
+              this.dialogFormVisible = false;
+              this.getProductList();
+            }
+          }
+          return
+        }
         if (valid) {
           if (this.isAdding) {
             const result = await this.$API.brands.addBrand(this.brandForm);
@@ -160,7 +174,8 @@ export default {
           }
           if (this.isEditing) {
             const result = await this.$API.brands.updateBrand({
-              ...this.brandForm,id:this.updateId
+              ...this.brandForm,
+              id: this.isEditingBrand.id,
             });
             if (result.code === 200) {
               this.$message.success("修改品牌数据成功");
@@ -182,8 +197,31 @@ export default {
     handleEdit(index, row) {
       console.log(index, row);
       this.dialogFormVisible = true;
+      this.isEditingBrand = row;
       this.isEditing = true;
-      this.updateId = row.id;
+      this.brandForm.tmName = row.tmName;
+    },
+    handleDelete(index, row) {
+      console.log(index, row);
+      this.$confirm("此操作将永久删除该品牌, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(async () => {
+          await this.$API.brands.deleteBrand(row.id);
+          this.$message({
+            type: "success",
+            message: "删除成功!",
+          });
+          this.getProductList();
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消删除",
+          });
+        });
     },
   },
   mounted() {

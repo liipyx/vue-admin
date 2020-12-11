@@ -21,5 +21,12 @@ export default {
       url: `${api_name}/update`,
       data
     })
+  },
+  //删除
+  deleteBrand(id) {
+    return request({
+      method: "DELETE",
+      url:`${api_name}/remove/${id}`
+    })
   }
 };
