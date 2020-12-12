@@ -16,8 +16,8 @@
             :before-upload="beforeAvatarUpload"
           >
             <img
-              v-if="brandForm.logoUrl || isEditingBrand.logoUrl"
-              :src="isEditing ? isEditingBrand.logoUrl : brandForm.logoUrl"
+              v-if="brandForm.logoUrl"
+              :src="brandForm.logoUrl"
               class="avatar"
             />
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
@@ -89,7 +89,7 @@ export default {
       },
       isAdding: false,
       isEditing: false,
-      isEditingBrand: {},
+      isEditingId:0,
       rules: {
         logoUrl: [{ required: true, message: "请上传品牌LOGO！" }],
         tmName: [
@@ -147,20 +147,6 @@ export default {
     //提交添加品牌表单
     submitForm(formName) {
       this.$refs[formName].validate(async (valid) => {
-        if (brandForm.logoUrl || isEditingBrand.logoUrl) {
-          if (this.isEditing) {
-            const result = await this.$API.brands.updateBrand({
-              ...this.brandForm,
-              id: this.isEditingBrand.id,
-            });
-            if (result.code === 200) {
-              this.$message.success("修改品牌数据成功");
-              this.dialogFormVisible = false;
-              this.getProductList();
-            }
-          }
-          return
-        }
         if (valid) {
           if (this.isAdding) {
             const result = await this.$API.brands.addBrand(this.brandForm);
@@ -175,7 +161,7 @@ export default {
           if (this.isEditing) {
             const result = await this.$API.brands.updateBrand({
               ...this.brandForm,
-              id: this.isEditingBrand.id,
+              id: this.isEditingId,
             });
             if (result.code === 200) {
               this.$message.success("修改品牌数据成功");
@@ -197,9 +183,10 @@ export default {
     handleEdit(index, row) {
       console.log(index, row);
       this.dialogFormVisible = true;
-      this.isEditingBrand = row;
       this.isEditing = true;
       this.brandForm.tmName = row.tmName;
+      this.brandForm.logoUrl = row.logoUrl
+      this.isEditingId = row.id
     },
     handleDelete(index, row) {
       console.log(index, row);
