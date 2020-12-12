@@ -2,7 +2,7 @@
   <div>
     <el-button type="primary" icon="el-icon-plus" @click="add">添加</el-button>
     <!-- 弹框 -->
-    <el-dialog title="添加品牌" :visible.sync="dialogFormVisible">
+    <el-dialog :title="`${brandForm.id?'修改':'添加'}品牌`" :visible.sync="dialogFormVisible">
       <el-form :model="brandForm" ref="brandForm" :rules="rules">
         <el-form-item label="品牌名称" label-width="100px" prop="tmName">
           <el-input v-model="brandForm.tmName" autocomplete="off"></el-input>
@@ -87,9 +87,10 @@ export default {
         logoUrl: "",
         tmName: "",
       },
-      isAdding: false,
-      isEditing: false,
-      isEditingId:0,
+      // isAdding: false,
+      // isEditing: false,
+      // isEditingId:0,
+      // title: "",
       rules: {
         logoUrl: [{ required: true, message: "请上传品牌LOGO！" }],
         tmName: [
@@ -148,46 +149,43 @@ export default {
     submitForm(formName) {
       this.$refs[formName].validate(async (valid) => {
         if (valid) {
-          if (this.isAdding) {
-            const result = await this.$API.brands.addBrand(this.brandForm);
-            if (result.code === 200) {
-              this.$message.success("添加品牌数据成功");
-              this.dialogFormVisible = false;
-              this.getProductList();
-            } else {
-              this.$message.error(result.message);
-            }
+          let result
+          if (this.brandForm.id) {
+            result = await this.$API.brands.addBrand(this.brandForm);
+          } else {
+            result = await this.$API.brands.updateBrand(this.brandForm);
           }
-          if (this.isEditing) {
-            const result = await this.$API.brands.updateBrand({
-              ...this.brandForm,
-              id: this.isEditingId,
-            });
-            if (result.code === 200) {
-              this.$message.success("修改品牌数据成功");
-              this.dialogFormVisible = false;
-              this.getProductList();
-            }
+          if (result.code === 200) {
+            this.$message.success(`${this.isAdding?'添加':'修改'}品牌数据成功`);
+            this.dialogFormVisible = false;
+            this.getProductList();
+          } else {
+            this.$message.error(result.message);
           }
-          this.isAdding = false;
-          this.isEditing = false;
+          /* this.isAdding = false;
+          this.isEditing = false; */
         }
       });
     },
     // 添加
     add() {
       this.dialogFormVisible = true;
-      this.isAdding = true;
+      this.brandForm.id=null
+      // this.isAdding = true;
+      // this.title = "添加品牌";
     },
     //编辑
     handleEdit(index, row) {
       console.log(index, row);
       this.dialogFormVisible = true;
-      this.isEditing = true;
-      this.brandForm.tmName = row.tmName;
+      // this.isEditing = true;
+      /* this.brandForm.tmName = row.tmName;
       this.brandForm.logoUrl = row.logoUrl
-      this.isEditingId = row.id
+      this.isEditingId = row.id */
+      this.brandForm = { ...row };
+      // this.title = "修改品牌";
     },
+    //删除
     handleDelete(index, row) {
       console.log(index, row);
       this.$confirm("此操作将永久删除该品牌, 是否继续?", "提示", {
