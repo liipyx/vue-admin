@@ -2,7 +2,10 @@
   <div>
     <el-button type="primary" icon="el-icon-plus" @click="add">添加</el-button>
     <!-- 弹框 -->
-    <el-dialog :title="`${brandForm.id?'修改':'添加'}品牌`" :visible.sync="dialogFormVisible">
+    <el-dialog
+      :title="`${brandForm.id ? '修改' : '添加'}品牌`"
+      :visible.sync="dialogFormVisible"
+    >
       <el-form :model="brandForm" ref="brandForm" :rules="rules">
         <el-form-item label="品牌名称" label-width="100px" prop="tmName">
           <el-input v-model="brandForm.tmName" autocomplete="off"></el-input>
@@ -124,6 +127,7 @@ export default {
     handleCurrentChange(currentPage) {
       this.myCurrent = currentPage;
       this.getProductList();
+      window.scrollTo(0, 0);
     },
     handleSizeChange(myPageSize) {
       this.myPageSize = myPageSize;
@@ -149,14 +153,16 @@ export default {
     submitForm(formName) {
       this.$refs[formName].validate(async (valid) => {
         if (valid) {
-          let result
+          let result;
           if (this.brandForm.id) {
-            result = await this.$API.brands.addBrand(this.brandForm);
-          } else {
             result = await this.$API.brands.updateBrand(this.brandForm);
+          } else {
+            result = await this.$API.brands.addBrand(this.brandForm);
           }
           if (result.code === 200) {
-            this.$message.success(`${this.isAdding?'添加':'修改'}品牌数据成功`);
+            this.$message.success(
+              `${this.isAdding ? "添加" : "修改"}品牌数据成功`
+            );
             this.dialogFormVisible = false;
             this.getProductList();
           } else {
@@ -169,8 +175,10 @@ export default {
     },
     // 添加
     add() {
+      this.brandForm.tmName = "";
+      this.brandForm.logoUrl = "";
+      this.brandForm.id = null;
       this.dialogFormVisible = true;
-      this.brandForm.id=null
       // this.isAdding = true;
       // this.title = "添加品牌";
     },
@@ -199,6 +207,9 @@ export default {
             type: "success",
             message: "删除成功!",
           });
+          if (this.brands.length === 1) {
+            this.myCurrent -= 1;
+          }
           this.getProductList();
         })
         .catch(() => {
