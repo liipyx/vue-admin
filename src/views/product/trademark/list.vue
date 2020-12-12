@@ -36,7 +36,7 @@
       </div>
     </el-dialog>
     <!-- 表格 -->
-    <el-table :data="brands" border style="width: 100%">
+    <el-table v-loading="loading" :data="brands" border style="width: 100%">
       <el-table-column type="index" label="序号" width="80"> </el-table-column>
       <el-table-column prop="tmName" label="品牌名称"> </el-table-column>
       <el-table-column label="品牌LOGO">
@@ -82,6 +82,7 @@ export default {
   data() {
     return {
       brands: [],
+      loading: false,
       myCurrent: 1,
       myPageSize: 3,
       myTotal: 0,
@@ -97,13 +98,14 @@ export default {
       rules: {
         logoUrl: [{ required: true, message: "请上传品牌LOGO！" }],
         tmName: [
-          { required: true, message: "请输入品牌名称！", trigger: "blur" },
+          { /* required: true, message: "请输入品牌名称！", */ required: true,validator:this.validator,trigger: "blur" },
         ],
       },
     };
   },
   methods: {
     async getProductList() {
+      this.loading = true
       try {
         const result = await this.$API.brands.getProductList(
           this.myCurrent,
@@ -122,6 +124,17 @@ export default {
       } catch (err) {
         console.log("err ", err);
         this.$message.error("请求列表失败");
+      }
+      this.loading = false
+    },
+    //自定义校验规则
+    validator(rule,value,callback){
+      if(!value){
+        callback(new Error("品牌名称不能为空"))
+      }else if(value.length <2 || value.length > 10){
+        callback(new Error("品牌名称字数为2-10"))
+      }else{
+        callback()
       }
     },
     handleCurrentChange(currentPage) {
@@ -175,23 +188,18 @@ export default {
     },
     // 添加
     add() {
-      this.brandForm.tmName = "";
-      this.brandForm.logoUrl = "";
-      this.brandForm.id = null;
+      this.$refs.brandForm && this.$refs.brandForm.clearValidate()
+      this.brandForm = {
+        tmName : "",
+        logoUrl : ""
+      }
       this.dialogFormVisible = true;
-      // this.isAdding = true;
-      // this.title = "添加品牌";
     },
     //编辑
     handleEdit(index, row) {
-      console.log(index, row);
+      this.$refs.brandForm.clearValidate()
       this.dialogFormVisible = true;
-      // this.isEditing = true;
-      /* this.brandForm.tmName = row.tmName;
-      this.brandForm.logoUrl = row.logoUrl
-      this.isEditingId = row.id */
       this.brandForm = { ...row };
-      // this.title = "修改品牌";
     },
     //删除
     handleDelete(index, row) {
