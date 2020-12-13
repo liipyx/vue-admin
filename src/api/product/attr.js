@@ -27,4 +27,23 @@ export default {
       url:`${api_name}/attrInfoList/${category1Id}/${category2Id}/${category3Id}`
     })
   },
+  getAttrValueList(attrId) {
+    return request({
+      method: "GET",
+      url:`${api_name}/getAttrValueList/${attrId}`
+    })
+  },
+  saveAttrInfo(attr) {
+    return request({
+      method: "POST",
+      url: `${api_name}/saveAttrInfo`,
+      data:attr
+    })
+  },
+  deleteAttr(attrId) {
+    return request({
+      methods: "DELETE",
+      url:`${api_name}/deleteAttr/${attrId}`
+    })
+  }
 }

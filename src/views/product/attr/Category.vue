@@ -1,6 +1,6 @@
 <template>
   <el-card class="box-card">
-    <el-form :inline="true" :model="categoryList" class="demo-form-inline">
+    <el-form :inline="true" :model="categoryList" class="demo-form-inline" :disabled="isDisabled">
       <el-form-item label="一级分类">
         <el-select
           v-model="category1Id"
@@ -62,6 +62,9 @@ export default {
       category3Id: null,
       attrInfoList: [],
     };
+  },
+  props:{
+    isDisabled:Boolean
   },
   methods: {
     async select1(id) {
