@@ -97,23 +97,19 @@
           <el-button>随便一个标签，这个标签不显示</el-button>
         </el-table-column>
         <el-table-column label="操作">
-          <template v-slot="{ row, $index }">
-            <el-popconfirm @onConfirm="del(row, $index)" title="这是一段内容确定删除吗？">
+          <template v-slot="{ $index }">
+            <el-popconfirm
+              @onConfirm="del( $index)"
+              title="这是一段内容确定删除吗？"
+            >
               <el-button
                 size="mini"
+                slot="reference"
                 type="danger"
                 icon="el-icon-delete"
               ></el-button>
             </el-popconfirm>
-            <!-- <el-button
-                size="mini"
-                type="danger"
-                icon="el-icon-delete"
-                @click="del(row, $index)"
-              ></el-button
-            > -->
           </template>
-          <el-button>fdfff</el-button>
         </el-table-column>
       </el-table>
       <el-button type="primary" @click="saveAttr">保存</el-button>
