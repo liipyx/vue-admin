@@ -1,5 +1,4 @@
 import request from '@/utils/request'
-import axios from "axios"
 
 const api_name = "/admin/product"
 
@@ -41,16 +40,10 @@ export default {
       data:attr
     })
   },
-  /* deleteAttr(attrId) {
-    return request({
-      methods: "DELETE",
-      url:`${api_name}/deleteAttr/${attrId}`
-    })
-  } */
   deleteAttr(attrId) {
-    return axios({
-      methods: "DELETE",
-      url:`/dev-api${api_name}/deleteAttr/${attrId}`
+    return request({
+      method: "DELETE",
+      url:`${api_name}/deleteAttr/${attrId}`
     })
   }
 }

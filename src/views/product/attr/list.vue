@@ -76,13 +76,13 @@
         <el-table-column type="index" label="序号" width="80">
         </el-table-column>
         <el-table-column label="属性值名称">
-          <template v-slot="{ row,$index }">
+          <template v-slot="{ row, $index }">
             <el-input
               v-if="row.isEditing"
               v-model="row.valueName"
               placeholder="请输入属性名"
               ref="input"
-              @blur="editCompleted(row,$index)"
+              @blur="editCompleted(row, $index)"
               @keyup.enter.native="editCompleted(row)"
               size="mini"
             >
@@ -98,13 +98,22 @@
         </el-table-column>
         <el-table-column label="操作">
           <template v-slot="{ row, $index }">
-            <el-button
-              size="mini"
-              type="danger"
-              icon="el-icon-delete"
-              @click="del(row, $index)"
-            ></el-button>
+            <el-popconfirm @onConfirm="del(row, $index)" title="这是一段内容确定删除吗？">
+              <el-button
+                size="mini"
+                type="danger"
+                icon="el-icon-delete"
+              ></el-button>
+            </el-popconfirm>
+            <!-- <el-button
+                size="mini"
+                type="danger"
+                icon="el-icon-delete"
+                @click="del(row, $index)"
+              ></el-button
+            > -->
           </template>
+          <el-button>fdfff</el-button>
         </el-table-column>
       </el-table>
       <el-button type="primary" @click="saveAttr">保存</el-button>
