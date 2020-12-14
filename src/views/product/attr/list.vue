@@ -1,8 +1,11 @@
 <template>
   <div>
-    <Category
+    <!-- <Category
       @change="select3"
       @reSelect="clearInfoList"
+      :isDisabled="isDisabled"
+    ></Category> -->
+    <Category
       :isDisabled="isDisabled"
     ></Category>
     <el-card v-if="isShow" class="box-card" style="margin-top: 20px">
@@ -119,7 +122,7 @@
 </template>
 
 <script>
-import Category from "./Category";
+import Category from "@/components/Category";
 export default {
   name: "AttrList",
   data() {
@@ -167,7 +170,6 @@ export default {
     },
     //编辑属性
     async handleEdit(index, row) {
-      console.log(row);
       this.isShow = false;
       this.isDisabled = true;
       /* const attrValueList = await this.$API.attr.getAttrValueList(row.id);
@@ -186,7 +188,6 @@ export default {
     },
     // 编辑具体属性
     edit(row) {
-      console.log(row);
       this.$set(row, "isEditing", true);
       this.$nextTick(() => {
         this.$refs.input.focus();
@@ -208,7 +209,6 @@ export default {
     },
     //保存
     async saveAttr() {
-      console.log(this.attr);
       const result = await this.$API.attr.saveAttrInfo(this.attr);
       if (result.code === 200) {
         this.$message.success("保存成功");
@@ -224,9 +224,7 @@ export default {
     },
     //删除属性
     async handleDelete(index, row) {
-      console.log(row);
       const result = await this.$API.attr.deleteAttr(row.id);
-      console.log(result);
       const attrInfoList = await this.$API.attr.getAttrInfoList(
         this.id1,
         this.id2,
@@ -236,10 +234,16 @@ export default {
     },
     //删除具体属性值
     del(index) {
-      console.log(111);
-      console.log(index);
       this.attr.attrValueList.splice(index, 1);
     },
+  },
+  mounted(){
+    this.$bus.$on("change",this.select3)
+    this.$bus.$on("reSelect",this.clearInfoList)
+  },
+  beforeDestroy(){
+    this.$bus.$off("change",this.select3)
+    this.$bus.$off("reSelect",this.clearInfoList)
   },
   components: {
     Category,

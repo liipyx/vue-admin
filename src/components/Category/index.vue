@@ -33,7 +33,7 @@
         <el-select
           v-model="category3Id"
           placeholder="请选择"
-          @change="$emit('change', category1Id, category2Id, category3Id)"
+          @change="$bus.$emit('change', category1Id, category2Id, category3Id)"
         >
           <el-option
             v-for="category3 in categoryList.category3List"
@@ -74,14 +74,14 @@ export default {
       this.category3Id=null
       const category2List = await this.$API.attr.getCategory2(id);
       this.categoryList.category2List = category2List.data;
-      this.$listeners.reSelect()
+      this.$bus.$emit("reSelect")
     },
     async select2(id) {
       this.categoryList.category3List=[]
       this.category3Id=null
       const category3List = await this.$API.attr.getCategory3(id);
       this.categoryList.category3List = category3List.data;
-      this.$listeners.reSelect()
+      this.$bus.$emit("reSelect")
     },
     /* async select3(id1, id2, id3) {
       console.log(333);
