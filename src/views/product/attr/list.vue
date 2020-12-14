@@ -61,7 +61,11 @@
           ></el-input>
         </el-form-item>
       </el-form>
-      <el-button type="primary" icon="el-icon-plus" @click="addAttrValue"
+      <el-button
+        type="primary"
+        icon="el-icon-plus"
+        @click="addAttrValue"
+        :disabled="!attr.attrName"
         >添加属性值</el-button
       >
       <el-table
@@ -72,36 +76,35 @@
         <el-table-column type="index" label="序号" width="80">
         </el-table-column>
         <el-table-column label="属性值名称">
-          <template slot-scope="scope">
+          <template v-slot="{ row,$index }">
             <el-input
-              v-model="scope.row.valueName"
+              v-if="row.isEditing"
+              v-model="row.valueName"
               placeholder="请输入属性名"
               ref="input"
-              @blur="editCompleted(scope.row)"
-              @keyup.enter.native="editCompleted(scope.row)"
+              @blur="editCompleted(row,$index)"
+              @keyup.enter.native="editCompleted(row)"
               size="mini"
-              autofocus
-              v-if="scope.row.isEditing"
             >
             </el-input>
             <span
               v-else
               style="display: inline-block; width: 100%"
-              @click="edit(scope.row)"
-              >{{ scope.row.valueName }}</span
+              @click="edit(row)"
+              >{{ row.valueName }}</span
             >
           </template>
-          <el-button>什么鬼啊</el-button>
+          <el-button>随便一个标签，这个标签不显示</el-button>
         </el-table-column>
-        <el-table-column label="操作"
-          ><template slot-scope="scope">
+        <el-table-column label="操作">
+          <template v-slot="{ row, $index }">
             <el-button
               size="mini"
               type="danger"
               icon="el-icon-delete"
-              @click="delete (scope.$index, scope.row)"
-            ></el-button
-          ></template>
+              @click="del(row, $index)"
+            ></el-button>
+          </template>
         </el-table-column>
       </el-table>
       <el-button type="primary" @click="saveAttr">保存</el-button>
@@ -148,21 +151,28 @@ export default {
     addAttr() {
       this.isShow = false;
       this.isDisabled = true;
-      this.attr.categoryId = this.id3;
-      this.attr.categoryLevel = 3;
+      this.attr = {
+        attrName: "",
+        attrValueList: [],
+        categoryId: this.id3,
+        categoryLevel: 3,
+      };
+      // this.attr.categoryId = this.id3;
+      // this.attr.categoryLevel = 3;
     },
     //编辑属性
     async handleEdit(index, row) {
       console.log(row);
       this.isShow = false;
       this.isDisabled = true;
-      const attrValueList = await this.$API.attr.getAttrValueList(row.id);
+      /* const attrValueList = await this.$API.attr.getAttrValueList(row.id);
       console.log(attrValueList);
       this.attr.attrName = row.attrName;
       this.attr.attrValueList = attrValueList.data;
       this.attr.categoryId = row.categoryId;
       this.attr.categoryLevel = row.categoryLevel;
-      this.attr.id = row.id;
+      this.attr.id = row.id; */
+      this.attr = JSON.parse(JSON.stringify(row));
     },
     //取消编辑/添加属性
     cancleEditeAttr() {
@@ -178,15 +188,20 @@ export default {
       });
       console.log(row);
     },
-    editCompleted(row) {
-      row.isEditing = false;
+    editCompleted(row, index) {
+      if (!row.valueName) {
+        this.attr.attrValueList.splice(index, 1);
+        row.isEditing = false;
+      }
     },
+    //添加属性值
     addAttrValue() {
       this.attr.attrValueList.push({ isEditing: true });
       this.$nextTick(() => {
         this.$refs.input.focus();
       });
     },
+    //保存
     async saveAttr() {
       console.log(this.attr);
       const result = await this.$API.attr.saveAttrInfo(this.attr);
@@ -205,7 +220,8 @@ export default {
     //删除属性
     async handleDelete(index, row) {
       console.log(row);
-      this.$API.attr.deleteAttr(row.id);
+      const result = await this.$API.attr.deleteAttr(row.id);
+      console.log(result);
       const attrInfoList = await this.$API.attr.getAttrInfoList(
         this.id1,
         this.id2,
@@ -213,8 +229,10 @@ export default {
       );
       this.attrInfoList = attrInfoList.data;
     },
-    //删除具体属性
-    delete(index) {
+    //删除具体属性值
+    del(index) {
+      console.log(111);
+      console.log(index);
       this.attr.attrValueList.splice(index, 1);
     },
   },
