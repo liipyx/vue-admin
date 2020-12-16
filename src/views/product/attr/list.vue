@@ -8,7 +8,7 @@
     <Category
       :isDisabled="isDisabled"
     ></Category>
-    <el-card v-if="isShow" class="box-card" style="margin-top: 20px">
+    <el-card v-show="isShow" class="box-card" style="margin-top: 20px">
       <el-button
         type="primary"
         icon="el-icon-plus"
@@ -55,7 +55,7 @@
       </el-table>
     </el-card>
     <!-- 添加属性/编辑属性 -->
-    <el-card v-else class="box-card" style="margin-top: 20px">
+    <el-card v-show="!isShow" class="box-card" style="margin-top: 20px">
       <el-form ref="attr" :model="attr" inline>
         <el-form-item label="属性名">
           <el-input
@@ -97,7 +97,7 @@
               >{{ row.valueName }}</span
             >
           </template>
-          <el-button>随便一个标签，这个标签不显示</el-button>
+          <!-- <el-button>随便一个标签，这个标签不显示</el-button> -->
         </el-table-column>
         <el-table-column label="操作">
           <template v-slot="{ $index }">

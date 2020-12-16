@@ -24,11 +24,14 @@
         </el-form-item>
         <el-form-item label="SPU描述">
           <el-upload
+            accept="image/*"
             action="/dev-api/admin/product/fileUpload"
             list-type="picture-card"
             :on-preview="handlePictureCardPreview"
             :on-remove="handleRemove"
-            :file-list="imgList"
+            :file-list="imgShowList"
+            :on-success="handleAvatarSuccess"
+            :before-upload="beforeAvatarUpload"
           >
             <i class="el-icon-plus"></i>
           </el-upload>
@@ -39,17 +42,23 @@
         </el-form-item>
         <el-form-item label="销售属性">
           <el-select
-            v-model="saleAttrId"
+            v-model="spu.sale"
             :placeholder="`还有${saleAttrList.length}未选择`"
           >
             <el-option
               v-for="saleAttr in saleAttrList"
               :key="saleAttr.id"
               :label="saleAttr.name"
-              :value="saleAttr.id"
+              :value="`${saleAttr.id}-${saleAttr.name}`"
             ></el-option>
           </el-select>
-          <el-button type="primary" icon="el-icon-plus">添加属性值</el-button>
+          <el-button
+            type="primary"
+            icon="el-icon-plus"
+            @click="addAttrValue"
+            :disabled="!spu.sale"
+            >添加属性值</el-button
+          >
         </el-form-item>
       </el-form>
       <el-table
@@ -65,19 +74,41 @@
           prop="saleAttrName"
         ></el-table-column>
         <el-table-column label="属性值名称列表">
-          <template v-slot="{ row }">
+          <template v-slot="{ row,$index }">
             <el-tag
+              @close="delTag(index,row)"
+              closable
               style="margin-right: 5px"
-              v-for="attrVal in row.spuSaleAttrValueList"
+              v-for="(attrVal,index) in row.spuSaleAttrValueList"
               :key="attrVal.id"
               >{{ attrVal.saleAttrValueName }}</el-tag
+            >
+            <el-input
+              v-if="row.isEditing"
+              v-model="addAttrText"
+              placeholder="名称"
+              style="width: 100px"
+              size="small"
+              ref="attrInput"
+              @blur="editCompleted(row,$index)"
+              @keyup.enter.native="editCompleted(row,$index)"
+            ></el-input>
+            <el-button
+              v-else
+              icon="el-icon-plus"
+              size="small"
+              @click="addValue(row)"
+              >添加</el-button
             >
           </template>
           <!-- <el-button>随便一个标签，这个标签不显示</el-button> -->
         </el-table-column>
         <el-table-column label="操作" width="150px">
-          <template>
-            <el-popconfirm title="这是一段内容确定删除吗？">
+          <template v-slot="{row, $index }">
+            <el-popconfirm
+              @onConfirm="del( $index)"
+              :title="`确定删除 ${row.saleAttrName} 吗?`"
+            >
               <el-button
                 size="mini"
                 slot="reference"
@@ -106,10 +137,9 @@ export default {
       spuSaleAttrList: [],
       spuBrand: {},
       imgList: [],
-      brandId: null,
-      saleAttrId: null,
       dialogImageUrl: "",
       dialogVisible: false,
+      addAttrText: "",
     };
   },
   props: {
@@ -123,13 +153,25 @@ export default {
         );
       });
     },
+    imgShowList() {
+      return this.imgList.map((img) => {
+        return {
+          uid: img.uid || img.id,
+          name: img.imgName,
+          url: img.imgUrl,
+        };
+      });
+    },
   },
   methods: {
+    //删除图片
     handleRemove(file, fileList) {
       console.log(file, fileList);
+      this.imgList = this.imgList.filter((img) => img.imgUrl !== file.url);
     },
+    //图片大图预览
     handlePictureCardPreview(file) {
-      console.log(file)
+      console.log(file);
       this.dialogImageUrl = file.url;
       this.dialogVisible = true;
     },
@@ -156,22 +198,79 @@ export default {
       const result = await this.$API.spu.getSpuImg(this.spu.id);
       if (result.code === 200) {
         this.$message.success("获取所有图片成功~");
-        this.imgList = result.data.map((img) => {
-          return {
-            id: img.id,
-            name: img.imgName,
-            url: img.imgUrl,
-          };
-        });
+        this.imgList = result.data;
       } else {
         this.$message.error(result.message);
       }
     },
+    handleAvatarSuccess(res, file) {
+      console.log(res, file);
+      this.imgList.push({
+        imgName: file.name,
+        imgUrl: res.data,
+        uid: file.uid,
+        spuId: this.spu.id,
+      });
+    },
+    beforeAvatarUpload(file) {
+      const validType = ["image/jpeg", "image/jpg", "image/png"];
+      const isValidType = validType.indexOf(file.type) > -1;
+      const isLimitSize = file.size / 1024 < 50;
+
+      if (!isValidType) {
+        this.$message.error("上传品牌LOGO只能是 JPG/PNG 格式!");
+      }
+      if (!isLimitSize) {
+        this.$message.error("上传品牌LOGO大小不能超过 50 kb!");
+      }
+      return isValidType && isLimitSize;
+    },
+    //添加属性值按钮
+    addAttrValue() {
+      const { sale, id } = this.spu;
+      const [baseSaleAttrId, saleAttrName] = sale.split("-");
+      this.spuSaleAttrList.push({
+        baseSaleAttrId: +baseSaleAttrId,
+        saleAttrName,
+        spuId: id,
+        spuSaleAttrValueList: [],
+      });
+      this.spu.sale = "";
+    },
+    //添加按钮
+    addValue(row) {
+      this.$set(row, "isEditing", true);
+      this.$nextTick(() => {
+        this.$refs.attrInput.focus();
+      });
+    },
+    //完成编辑
+    editCompleted(row,index){
+      if(this.addAttrText){
+        row.spuSaleAttrValueList.push({
+          spuId: this.spu.id,
+          baseSaleAttrId: row.baseSaleAttrId,
+          saleAttrValueName: this.addAttrText,
+          saleAttrName: row.saleAttrName
+        })
+        this.addAttrText = ""
+      }
+      row.isEditing = false
+    },
+    //删除标签
+    delTag(index,row){
+      /* row.spuSaleAttrValueList = row.spuSaleAttrValueList.filter(attrVal=>{
+        attrVal.id !== tagId
+      }) */
+      row.spuSaleAttrValueList.splice(index,1)
+    },
+    //删除整个属性
+    del(index){
+      this.spuSaleAttrList.splice(index,1)
+    },
     cancle() {
       this.$emit("closeUpdateList");
     },
-    handlePictureCardPreview() {},
-    handleRemove() {},
   },
   mounted() {
     this.getBaseSaleAttrList();
