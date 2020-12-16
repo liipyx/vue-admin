@@ -1,8 +1,8 @@
 <template>
 <div>
   <Category></Category>
-  <spuShowList v-if="isShow" @showUpdateList="showUpdateList" @closeUpdateList="closeUpdateList"></spuShowList>
-  <SpuUpdateList v-else :item="item"></SpuUpdateList>
+  <spuShowList v-if="isShow" @showUpdateList="showUpdateList"></spuShowList>
+  <SpuUpdateList v-else :item="item" @closeUpdateList="closeUpdateList"></SpuUpdateList>
 </div>
 </template>
 
@@ -24,7 +24,6 @@ export default {
       this.item = {...row}
     },
     closeUpdateList(){
-      console.log(111)
       this.isShow = true
     }
   },
@@ -35,3 +34,11 @@ export default {
   }
 }
 </script>
+<style lang="sass" scoped>
+>>>.el-pagination
+  text-align: right
+
+>>>.el-pagination__sizes
+  margin-left: 350px
+
+</style>

@@ -3,7 +3,7 @@
     <el-card class="box-card" style="margin-top: 20px">
       <el-form ref="attr" :model="spu" label-width="80px">
         <el-form-item label="SPU名称" prop="spuName">
-          <el-input placeholder="请输入属性名"></el-input>
+          <el-input placeholder="请输入属性名" v-model="spu.spuName"></el-input>
         </el-form-item>
         <el-form-item label="品牌" prop="tmId">
           <el-select v-model="spu.tmId" placeholder="请选择品牌">
@@ -19,26 +19,31 @@
           <el-input
             type="textarea"
             placeholder="SPU描述"
-            prop="spuName"
+            v-model="spu.description"
           ></el-input>
         </el-form-item>
         <el-form-item label="SPU描述">
           <el-upload
-            action="https://jsonplaceholder.typicode.com/posts/"
+            action="/dev-api/admin/product/fileUpload"
             list-type="picture-card"
             :on-preview="handlePictureCardPreview"
             :on-remove="handleRemove"
+            :file-list="imgList"
           >
             <i class="el-icon-plus"></i>
           </el-upload>
+          <span>只能上传jpg/png文件，且不超过50kb</span>
           <el-dialog :visible.sync="dialogVisible">
             <img width="100%" :src="dialogImageUrl" alt="" />
           </el-dialog>
         </el-form-item>
         <el-form-item label="销售属性">
-          <el-select v-model="saleAttrId" :placeholder="`还有${BaseSaleAttrList.length}未选择`">
+          <el-select
+            v-model="saleAttrId"
+            :placeholder="`还有${saleAttrList.length}未选择`"
+          >
             <el-option
-              v-for="saleAttr in BaseSaleAttrList"
+              v-for="saleAttr in saleAttrList"
               :key="saleAttr.id"
               :label="saleAttr.name"
               :value="saleAttr.id"
@@ -47,22 +52,26 @@
           <el-button type="primary" icon="el-icon-plus">添加属性值</el-button>
         </el-form-item>
       </el-form>
-      <el-table :data="[]" border style="width: 100%; margin: 20px 0">
+      <el-table
+        :data="spuSaleAttrList"
+        border
+        style="width: 100%; margin: 20px 0"
+      >
         <el-table-column type="index" label="序号" width="80">
         </el-table-column>
-        <el-table-column label="属性名" width="150px">
-          <template>
-            <el-input placeholder="请输入属性名" ref="input" size="mini">
-            </el-input>
-            <span style="display: inline-block; width: 100%"></span>
-          </template>
-          <!-- <el-button>随便一个标签，这个标签不显示</el-button> -->
-        </el-table-column>
+        <el-table-column
+          label="属性名"
+          width="150px"
+          prop="saleAttrName"
+        ></el-table-column>
         <el-table-column label="属性值名称列表">
-          <template>
-            <el-input placeholder="请输入属性名" ref="input" size="mini">
-            </el-input>
-            <span style="display: inline-block; width: 100%"></span>
+          <template v-slot="{ row }">
+            <el-tag
+              style="margin-right: 5px"
+              v-for="attrVal in row.spuSaleAttrValueList"
+              :key="attrVal.id"
+              >{{ attrVal.saleAttrValueName }}</el-tag
+            >
           </template>
           <!-- <el-button>随便一个标签，这个标签不显示</el-button> -->
         </el-table-column>
@@ -93,36 +102,82 @@ export default {
       dialogImageUrl: "",
       dialogVisible: false,
       spu: this.item,
-      BaseSaleAttrList: [],
+      baseSaleAttrList: [],
+      spuSaleAttrList: [],
       spuBrand: {},
-      brandId:null,
-      saleAttrId:null
+      imgList: [],
+      brandId: null,
+      saleAttrId: null,
+      dialogImageUrl: "",
+      dialogVisible: false,
     };
   },
   props: {
     item: Object,
   },
+  computed: {
+    saleAttrList() {
+      return this.baseSaleAttrList.filter((attr) => {
+        return !this.spuSaleAttrList.find(
+          (item) => item.baseSaleAttrId === attr.id
+        );
+      });
+    },
+  },
   methods: {
-    handlePictureCardPreview() {},
-    handleRemove() {},
-    //获取所以销售属性
+    handleRemove(file, fileList) {
+      console.log(file, fileList);
+    },
+    handlePictureCardPreview(file) {
+      console.log(file)
+      this.dialogImageUrl = file.url;
+      this.dialogVisible = true;
+    },
+    //获取所有销售属性
     async getBaseSaleAttrList() {
       const result = await this.$API.spu.getBaseSaleAttrList();
-      this.BaseSaleAttrList = result.data;
+      this.baseSaleAttrList = result.data;
+    },
+    //获取销售属性值列表
+    async getSpuSaleAttrList() {
+      const result = await this.$API.spu.getSpuSaleAttrList(this.spu.id);
+      if (result.code === 200) {
+        this.$message.success("获取属性列表成功");
+        this.spuSaleAttrList = result.data;
+      }
     },
     //获取所以品牌数据
-    async getSpuBrand() {
-      const result = await this.$API.spu.getTrademarkList(this.spu.id);
+    async getTrademarkList() {
+      const result = await this.$API.spu.getTrademarkList();
       this.spuBrand = result.data;
     },
-    cancle(){
-      console.log(222)
-      this.$listeners.closeUpdateList()
-    }
+    //获取图片数据
+    async getSpuImg() {
+      const result = await this.$API.spu.getSpuImg(this.spu.id);
+      if (result.code === 200) {
+        this.$message.success("获取所有图片成功~");
+        this.imgList = result.data.map((img) => {
+          return {
+            id: img.id,
+            name: img.imgName,
+            url: img.imgUrl,
+          };
+        });
+      } else {
+        this.$message.error(result.message);
+      }
+    },
+    cancle() {
+      this.$emit("closeUpdateList");
+    },
+    handlePictureCardPreview() {},
+    handleRemove() {},
   },
   mounted() {
     this.getBaseSaleAttrList();
-    this.getSpuBrand();
+    this.getTrademarkList();
+    this.getSpuImg();
+    this.getSpuSaleAttrList();
   },
 };
 </script>
