@@ -134,7 +134,7 @@ export default {
       }else if(value.length <2 || value.length > 10){
         callback(new Error("品牌名称字数为2-10"))
       }else{
-        callback()
+        callback() //不传参代表检验成功
       }
     },
     handleCurrentChange(currentPage) {

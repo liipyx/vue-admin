@@ -1,38 +1,43 @@
 <template>
-<div>
-  <Category></Category>
-  <spuShowList v-if="isShow" @showUpdateList="showUpdateList"></spuShowList>
-  <SpuUpdateList v-else :item="item" @closeUpdateList="closeUpdateList"></SpuUpdateList>
-</div>
+  <div>
+    <Category></Category>
+    <spuShowList v-if="isShow" @showUpdateList="showUpdateList"></spuShowList>
+    <SpuUpdateList
+      v-else
+      :item="item"
+      @closeUpdateList="closeUpdateList"
+    ></SpuUpdateList>
+  </div>
 </template>
 
 <script>
 import Category from "@/components/Category";
-import spuShowList from "./spuShowList"
-import SpuUpdateList from "./spuUpdateList"
+import spuShowList from "./spuShowList";
+import SpuUpdateList from "./spuUpdateList";
 export default {
-  name: 'SpuList',
-  data(){
+  name: "SpuList",
+  data() {
     return {
-      isShow:true,
-      item:{}
-    }
+      isShow: true,
+      item: {},
+    };
   },
-  methods:{
-    showUpdateList(row){
-      this.isShow = false
-      this.item = {...row}
+  methods: {
+    showUpdateList(row) {
+      this.isShow = false;
+      this.item = { ...row };
     },
-    closeUpdateList(){
-      this.isShow = true
-    }
+    closeUpdateList() {
+      this.isShow = true;
+      console.log(222)
+    },
   },
-  components:{
+  components: {
     Category,
     spuShowList,
-    SpuUpdateList
-  }
-}
+    SpuUpdateList,
+  },
+};
 </script>
 <style lang="sass" scoped>
 >>>.el-pagination
@@ -40,5 +45,4 @@ export default {
 
 >>>.el-pagination__sizes
   margin-left: 350px
-
 </style>

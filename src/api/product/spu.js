@@ -48,4 +48,20 @@ export default {
       url: `${api_name}/spuImageList/${spuId}`
     });
   },
+  //修改spu
+  updateSpu(spuInfo) {
+    return request({
+      method: "POST",
+      url: `${api_name}/updateSpuInfo`,
+      data: spuInfo
+    })
+  },
+  //添加spu
+  savaSpu(spuInfo) {
+    return request({
+      method: "POST",
+      url: `${api_name}/saveSpuInfo`,
+      data: spuInfo
+    })
+  }
 };

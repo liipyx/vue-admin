@@ -1,28 +1,28 @@
 <template>
   <div>
     <el-card class="box-card" style="margin-top: 20px">
-      <el-form ref="attr" :model="spu" label-width="80px">
+      <el-form :model="spu" label-width="80px" :rules="rules" ref="spuForm">
         <el-form-item label="SPU名称" prop="spuName">
           <el-input placeholder="请输入属性名" v-model="spu.spuName"></el-input>
         </el-form-item>
         <el-form-item label="品牌" prop="tmId">
           <el-select v-model="spu.tmId" placeholder="请选择品牌">
             <el-option
-              v-for="brand in spuBrand"
-              :key="brand.id"
-              :label="brand.tmName"
-              :value="brand.id"
+              v-for="tm in spuBrand"
+              :key="tm.id"
+              :label="tm.tmName"
+              :value="tm.id"
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="SPU描述">
+        <el-form-item label="SPU描述" prop="description">
           <el-input
             type="textarea"
             placeholder="SPU描述"
             v-model="spu.description"
           ></el-input>
         </el-form-item>
-        <el-form-item label="SPU描述">
+        <el-form-item label="SPU图片" prop="imgList">
           <el-upload
             accept="image/*"
             action="/dev-api/admin/product/fileUpload"
@@ -40,7 +40,7 @@
             <img width="100%" :src="dialogImageUrl" alt="" />
           </el-dialog>
         </el-form-item>
-        <el-form-item label="销售属性">
+        <el-form-item label="销售属性" prop="saleAttr">
           <el-select
             v-model="spu.sale"
             :placeholder="`还有${saleAttrList.length}未选择`"
@@ -74,12 +74,12 @@
           prop="saleAttrName"
         ></el-table-column>
         <el-table-column label="属性值名称列表">
-          <template v-slot="{ row,$index }">
+          <template v-slot="{ row, $index }">
             <el-tag
-              @close="delTag(index,row)"
+              @close="delTag(index, row)"
               closable
               style="margin-right: 5px"
-              v-for="(attrVal,index) in row.spuSaleAttrValueList"
+              v-for="(attrVal, index) in row.spuSaleAttrValueList"
               :key="attrVal.id"
               >{{ attrVal.saleAttrValueName }}</el-tag
             >
@@ -90,8 +90,8 @@
               style="width: 100px"
               size="small"
               ref="attrInput"
-              @blur="editCompleted(row,$index)"
-              @keyup.enter.native="editCompleted(row,$index)"
+              @blur="editCompleted(row, $index)"
+              @keyup.enter.native="editCompleted(row, $index)"
             ></el-input>
             <el-button
               v-else
@@ -104,9 +104,9 @@
           <!-- <el-button>随便一个标签，这个标签不显示</el-button> -->
         </el-table-column>
         <el-table-column label="操作" width="150px">
-          <template v-slot="{row, $index }">
+          <template v-slot="{ row, $index }">
             <el-popconfirm
-              @onConfirm="del( $index)"
+              @onConfirm="del($index)"
               :title="`确定删除 ${row.saleAttrName} 吗?`"
             >
               <el-button
@@ -119,7 +119,7 @@
           </template>
         </el-table-column>
       </el-table>
-      <el-button type="primary">保存</el-button>
+      <el-button type="primary" @click="save">保存</el-button>
       <el-button @click="cancle">取消</el-button>
     </el-card>
   </div>
@@ -140,6 +140,17 @@ export default {
       dialogImageUrl: "",
       dialogVisible: false,
       addAttrText: "",
+      rules: {
+        spuName: [
+          { required: true, message: "请输入属性名！", trigger: "blur" },
+        ],
+        tmId: [{ required: true, message: "请选择品牌！", trigger: "blur" }],
+        description: [
+          { required: true, message: "请添加属性描述", trigger: "blur" },
+        ],
+        imgList: [{ required: true, validator: this.imgValidator }],
+        saleAttr: [{ required: true, validator: this.attrValidator }],
+      },
     };
   },
   props: {
@@ -164,6 +175,28 @@ export default {
     },
   },
   methods: {
+    //自定义表单校验
+    imgValidator(rules, value, callback) {
+      if (this.imgList.length <= 0) {
+        callback(new Error("请上传至少一张图片！"));
+        return;
+      }
+      callback();
+    },
+    attrValidator(rules, value, callback) {
+      if (this.spuSaleAttrList.length <= 0) {
+        callback(new Error("请选择至少一个销售属性！"));
+        return;
+      }
+      const isNotOk = this.spuSaleAttrList.some(
+        (saleAttr) => saleAttr.spuSaleAttrValueList.length <= 0
+      );
+      if (isNotOk) {
+        callback(new Error("请添加至少一个销售属性值！"));
+        return;
+      }
+      callback();
+    },
     //删除图片
     handleRemove(file, fileList) {
       console.log(file, fileList);
@@ -245,28 +278,48 @@ export default {
       });
     },
     //完成编辑
-    editCompleted(row,index){
-      if(this.addAttrText){
+    editCompleted(row, index) {
+      if (this.addAttrText) {
         row.spuSaleAttrValueList.push({
           spuId: this.spu.id,
           baseSaleAttrId: row.baseSaleAttrId,
           saleAttrValueName: this.addAttrText,
-          saleAttrName: row.saleAttrName
-        })
-        this.addAttrText = ""
+          saleAttrName: row.saleAttrName,
+        });
+        this.addAttrText = "";
       }
-      row.isEditing = false
+      row.isEditing = false;
     },
     //删除标签
-    delTag(index,row){
-      /* row.spuSaleAttrValueList = row.spuSaleAttrValueList.filter(attrVal=>{
-        attrVal.id !== tagId
-      }) */
-      row.spuSaleAttrValueList.splice(index,1)
+    delTag(index, row) {
+      row.spuSaleAttrValueList.splice(index, 1);
     },
     //删除整个属性
-    del(index){
-      this.spuSaleAttrList.splice(index,1)
+    del(index) {
+      this.spuSaleAttrList.splice(index, 1);
+    },
+    //保存
+    save() {
+      this.$refs.spuForm.validate(async (valid) => {
+        if (valid) {
+          console.log("校验通过");
+          const spuInfo = {
+            ...this.spu,
+            spuImageList: this.imgList,
+            spuSaleAttrList: this.spuSaleAttrList,
+          };
+          const result = await this.$API.spu.updateSpu(spuInfo);
+          if (result.code === 200) {
+            this.$message.success("保存spu成功");
+            this.$emit("closeUpdateList");
+            this.$nextTick(() => {
+              this.$bus.$emit("reGetSpuList", this.spu.category3Id);
+            });
+          } else {
+            this.$message.error("保存spu失败");
+          }
+        }
+      });
     },
     cancle() {
       this.$emit("closeUpdateList");
