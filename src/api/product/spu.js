@@ -63,5 +63,12 @@ export default {
       url: `${api_name}/saveSpuInfo`,
       data: spuInfo
     })
+  },
+  //删除spu
+  delSpu(spuId) {
+    return request({
+      method: `DELETE`,
+      url:`${api_name}/deleteSpu/${spuId}`
+    })
   }
 };

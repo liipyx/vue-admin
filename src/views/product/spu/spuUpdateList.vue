@@ -24,6 +24,8 @@
         </el-form-item>
         <el-form-item label="SPU图片" prop="imgList">
           <el-upload
+            :limit="5"
+            :on-exceed="exceed"
             accept="image/*"
             action="/dev-api/admin/product/fileUpload"
             list-type="picture-card"
@@ -237,7 +239,6 @@ export default {
       }
     },
     handleAvatarSuccess(res, file) {
-      console.log(res, file);
       this.imgList.push({
         imgName: file.name,
         imgUrl: res.data,
@@ -257,6 +258,9 @@ export default {
         this.$message.error("上传品牌LOGO大小不能超过 50 kb!");
       }
       return isValidType && isLimitSize;
+    },
+    exceed() {
+      this.$message("上传图片数量超出限制");
     },
     //添加属性值按钮
     addAttrValue() {
@@ -307,8 +311,13 @@ export default {
             ...this.spu,
             spuImageList: this.imgList,
             spuSaleAttrList: this.spuSaleAttrList,
-          };
-          const result = await this.$API.spu.updateSpu(spuInfo);
+          }
+          let result
+          if(this.spu.id){
+            result = await this.$API.spu.updateSpu(spuInfo);
+          }else{
+            result = await this.$API.spu.savaSpu(spuInfo);
+          }
           if (result.code === 200) {
             this.$message.success("保存spu成功");
             this.$emit("closeUpdateList");
@@ -323,13 +332,18 @@ export default {
     },
     cancle() {
       this.$emit("closeUpdateList");
+      this.$nextTick(() => {
+        this.$bus.$emit("reGetSpuList", this.spu.category3Id);
+      });
     },
   },
   mounted() {
     this.getBaseSaleAttrList();
     this.getTrademarkList();
-    this.getSpuImg();
-    this.getSpuSaleAttrList();
+    if (this.spu.id) {
+      this.getSpuImg();
+      this.getSpuSaleAttrList();
+    }
   },
 };
 </script>

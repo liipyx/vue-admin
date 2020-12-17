@@ -29,7 +29,6 @@ export default {
     },
     closeUpdateList() {
       this.isShow = true;
-      console.log(222)
     },
   },
   components: {
