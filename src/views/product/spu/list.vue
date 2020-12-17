@@ -1,12 +1,15 @@
 <template>
   <div>
-    <Category></Category>
-    <spuShowList v-if="isShow" @showUpdateList="showUpdateList"></spuShowList>
-    <SpuUpdateList
-      v-else
-      :item="item"
-      @closeUpdateList="closeUpdateList"
-    ></SpuUpdateList>
+    <div v-if="isSpuShow">
+      <Category></Category>
+      <spuShowList v-if="isShow" @showUpdateList="showUpdateList"></spuShowList>
+      <SpuUpdateList
+        v-else
+        :item="item"
+        @closeUpdateList="closeUpdateList"
+      ></SpuUpdateList>
+    </div>
+    <skuList v-else></skuList>
   </div>
 </template>
 
@@ -14,11 +17,13 @@
 import Category from "@/components/Category";
 import spuShowList from "./spuShowList";
 import SpuUpdateList from "./spuUpdateList";
+import skuList from "./skuList";
 export default {
   name: "SpuList",
   data() {
     return {
       isShow: true,
+      isSpuShow: false,
       item: {},
     };
   },
@@ -35,6 +40,7 @@ export default {
     Category,
     spuShowList,
     SpuUpdateList,
+    skuList,
   },
 };
 </script>

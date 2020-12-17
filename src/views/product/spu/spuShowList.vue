@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-card class="box-card" style="margin: 20px 0">
-      <el-button type="primary" icon="el-icon-plus" @click="$emit('showUpdateList',{category3Id:id3})">添加SPU</el-button>
+      <el-button type="primary" icon="el-icon-plus" @click="$emit('showUpdateList',{category3Id:id3})" :disabled="!this.id3">添加SPU</el-button>
       <el-table :data="spuList" border style="width: 100%; margin-top: 20px">
         <el-table-column type="index" label="序号" width="80">
         </el-table-column>
