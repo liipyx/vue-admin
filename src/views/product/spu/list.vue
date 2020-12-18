@@ -2,7 +2,7 @@
   <div>
     <div v-if="isSpuShow">
       <Category></Category>
-      <spuShowList v-if="isShow" @showUpdateList="showUpdateList"></spuShowList>
+      <spuShowList v-if="isShow" @showUpdateList="showUpdateList" @showSkuList="showSkuList"></spuShowList>
       <SpuUpdateList
         v-else
         :item="item"
@@ -23,7 +23,7 @@ export default {
   data() {
     return {
       isShow: true,
-      isSpuShow: false,
+      isSpuShow: true,
       item: {},
     };
   },
@@ -35,6 +35,9 @@ export default {
     closeUpdateList() {
       this.isShow = true;
     },
+    showSkuList(){
+      this.isSpuShow = false
+    }
   },
   components: {
     Category,
@@ -42,6 +45,9 @@ export default {
     SpuUpdateList,
     skuList,
   },
+  beforeDestroy(){
+    this.$store.commit("category/CLEAR_CATEGORYIDS")
+  }
 };
 </script>
 <style lang="sass" scoped>

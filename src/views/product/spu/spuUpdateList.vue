@@ -128,6 +128,7 @@
 </template>
 
 <script>
+import {mapState} from "vuex"
 export default {
   name: "SpuUpdateList",
   data() {
@@ -159,6 +160,9 @@ export default {
     item: Object,
   },
   computed: {
+    ...mapState({
+      categoryIds:state=>state.category.categoryIds
+    }),
     saleAttrList() {
       return this.baseSaleAttrList.filter((attr) => {
         return !this.spuSaleAttrList.find(
@@ -309,6 +313,7 @@ export default {
           console.log("校验通过");
           const spuInfo = {
             ...this.spu,
+            category3Id:this.categoryIds.id3,
             spuImageList: this.imgList,
             spuSaleAttrList: this.spuSaleAttrList,
           }
@@ -321,9 +326,9 @@ export default {
           if (result.code === 200) {
             this.$message.success("保存spu成功");
             this.$emit("closeUpdateList");
-            this.$nextTick(() => {
+            /* this.$nextTick(() => {
               this.$bus.$emit("reGetSpuList", this.spu.category3Id);
-            });
+            }); */
           } else {
             this.$message.error("保存spu失败");
           }
@@ -332,9 +337,9 @@ export default {
     },
     cancle() {
       this.$emit("closeUpdateList");
-      this.$nextTick(() => {
+      /* this.$nextTick(() => {
         this.$bus.$emit("reGetSpuList", this.spu.category3Id);
-      });
+      }); */
     },
   },
   mounted() {

@@ -5,9 +5,7 @@
       @reSelect="clearInfoList"
       :isDisabled="isDisabled"
     ></Category> -->
-    <Category
-      :isDisabled="isDisabled"
-    ></Category>
+    <Category :isDisabled="isDisabled"></Category>
     <el-card v-show="isShow" class="box-card" style="margin-top: 20px">
       <el-button
         type="primary"
@@ -102,7 +100,7 @@
         <el-table-column label="操作">
           <template v-slot="{ $index }">
             <el-popconfirm
-              @onConfirm="del( $index)"
+              @onConfirm="del($index)"
               title="这是一段内容确定删除吗？"
             >
               <el-button
@@ -122,6 +120,7 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
 import Category from "@/components/Category";
 export default {
   name: "AttrList",
@@ -131,25 +130,42 @@ export default {
       isShow: true,
       btnIsAble: false,
       isDisabled: false,
-      id1: null,
+      /* id1: null,
       id2: null,
-      id3: null,
+      id3: null, */
       attr: {
         attrName: "",
         attrValueList: [],
       },
     };
   },
+  computed: {
+    ...mapState({
+      categoryIds: (state) => state.category.categoryIds,
+    }),
+  },
+  watch: {
+    async "categoryIds.id3"(id3) {
+      if(!id3) return
+      const attrInfoList = await this.$API.attr.getAttrInfoList(
+        this.categoryIds.id1,
+        this.categoryIds.id2,
+        this.categoryIds.id3
+      );
+      this.attrInfoList = attrInfoList.data;
+      this.btnIsAble = true
+    },
+  },
   methods: {
-    async select3(id1, id2, id3) {
+    /* async select3() {
       console.log(id1, id2, id3);
       this.id1 = id1;
       this.id2 = id2;
       this.id3 = id3;
       const attrInfoList = await this.$API.attr.getAttrInfoList(id1, id2, id3);
-      this.attrInfoList = attrInfoList.data;
+      this.attrInfoList = attrInfoList.data; 
       this.btnIsAble = true;
-    },
+    },*/
     //当重新选择一级、二级分类时清空attrInfoList
     clearInfoList() {
       this.attrInfoList = [];
@@ -215,9 +231,9 @@ export default {
         this.isShow = true;
         this.isDisabled = false;
         const attrInfoList = await this.$API.attr.getAttrInfoList(
-          this.id1,
-          this.id2,
-          this.id3
+          this.categoryIds.id1,
+          this.categoryIds.id2,
+          this.categoryIds.id3
         );
         this.attrInfoList = attrInfoList.data;
       }
@@ -226,9 +242,9 @@ export default {
     async handleDelete(index, row) {
       const result = await this.$API.attr.deleteAttr(row.id);
       const attrInfoList = await this.$API.attr.getAttrInfoList(
-        this.id1,
-        this.id2,
-        this.id3
+        this.categoryIds.id1,
+        this.categoryIds.id2,
+        this.categoryIds.id3
       );
       this.attrInfoList = attrInfoList.data;
     },
@@ -237,13 +253,14 @@ export default {
       this.attr.attrValueList.splice(index, 1);
     },
   },
-  mounted(){
-    this.$bus.$on("change",this.select3)
-    this.$bus.$on("reSelect",this.clearInfoList)
+  mounted() {
+    // this.$bus.$on("change",this.select3)
+    this.$bus.$on("reSelect", this.clearInfoList);
   },
-  beforeDestroy(){
-    this.$bus.$off("change",this.select3)
-    this.$bus.$off("reSelect",this.clearInfoList)
+  beforeDestroy() {
+    // this.$bus.$off("change", this.select3);
+    this.$bus.$off("reSelect", this.clearInfoList);
+    this.$store.commit("category/CLEAR_CATEGORYIDS")
   },
   components: {
     Category,
