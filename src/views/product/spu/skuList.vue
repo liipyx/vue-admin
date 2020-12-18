@@ -3,43 +3,43 @@
     <el-card class="box-card">
       <el-form>
         <el-form-item label="SPU 名称" label-width="100px">
-          <span>xxx</span>
+          <span>{{skuItem.spuName}}</span>
         </el-form-item>
         <el-form-item label="SKU 名称" label-width="100px">
-          <el-input placeholder="SKU 名称"></el-input>
+          <el-input placeholder="SKU 名称" v-model="sku.skuName"></el-input>
         </el-form-item>
         <el-form-item label="价格(元)" label-width="100px">
-          <el-input placeholder="SKU 价格"></el-input>
+          <el-input placeholder="SKU 价格" v-model="sku.price"></el-input>
         </el-form-item>
         <el-form-item label="重量(千克)" label-width="100px">
-          <el-input placeholder="SKU 重量"></el-input>
+          <el-input placeholder="SKU 重量" v-model="sku.weight"></el-input>
         </el-form-item>
         <el-form-item label="规格描述" label-width="100px">
-          <el-input type="textarea" placeholder="SKU 规格描述"></el-input>
+          <el-input type="textarea" placeholder="SKU 规格描述" v-model="sku.skuDesc"></el-input>
         </el-form-item>
         <el-form-item class="select-wrap" label="平台属性" label-width="100px">
           <div>
-            <div class="selector" v-for="attrInfo in attrInfoList" :key="attrInfo.id">
-              <span>{{attrInfo.attrName}}</span>
-              <el-select placeholder="请选择">
-                <el-option v-for="attr in attrInfo.attrValueList" :key="attr.id" :label="attr.valueName" :value="attr.id"></el-option>
+            <div class="selector" v-for="(attr,index) in attrInfoList" :key="attr.id">
+              <span>{{attr.attrName}}</span>
+              <el-select placeholder="请选择" v-model="sku.skuAttrValueList[index]">
+                <el-option v-for="value in attr.attrValueList" :key="value.id" :label="value.valueName" :value="`${attr.id}-${value.id}`"></el-option>
               </el-select>
             </div>
           </div>
         </el-form-item>
         <el-form-item class="select-wrap" label="销售属性" label-width="100px">
           <div>
-            <div class="selector" v-for="saleAttr in spuSaleAttrList" :key="saleAttr.id">
+            <div class="selector" v-for="(saleAttr,index) in spuSaleAttrList" :key="saleAttr.id">
               <span>{{saleAttr.saleAttrName}}</span>
-              <el-select placeholder="请选择">
-                <el-option v-for="attr in saleAttr.spuSaleAttrValueList" :key="attr.id" :label="attr.saleAttrValueName" :value="attr.id"></el-option>
+              <el-select placeholder="请选择" v-model="sku.skuSaleAttrValueList[index]">
+                <el-option v-for="attr in saleAttr.spuSaleAttrValueList" :key="attr.id" :label="attr.saleAttrValueName" :value="`${saleAttr.id}-${attr.id}`"></el-option>
               </el-select>
             </div>
           </div>
         </el-form-item>
         <el-form-item class="select-wrap" label="图片列表" label-width="100px">
-          <el-table :data="spuImgList" border style="width: 100%">
-            <el-table-column type="selection" width="80">
+          <el-table :data="spuImgList" @selection-change="checkImg" row-key="id" border style="width: 100%">
+            <el-table-column type="selection" :reserve-selection="true" width="80">
             </el-table-column>
             <el-table-column label="图片">
               <template v-slot={row}>
@@ -48,8 +48,9 @@
             </el-table-column>
             <el-table-column label="名称" prop="imgName"> </el-table-column>
             <el-table-column label="操作">
-              <template>
-                <el-button type="primary" size="mini">设为默认</el-button>
+              <template v-slot={row}>
+                <el-tag v-if="row.isDefault" :disable-transitions="true" type="success" plain>默认</el-tag>
+                <el-button v-else type="primary" size="mini" @click="setDefault(row)">设为默认</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -73,12 +74,15 @@ export default {
       spuSaleAttrList:[],
       spuImgList:[],
       sku:{
-        imgList:[]
+        skuAttrValueList:[],
+        // skuDefaultImg:"",
+        skuImageList:[],
+        skuSaleAttrValueList:[],
       }
     };
   },
   props:{
-    spuId:Number
+    skuItem:Object
   },
   computed: {
     ...mapState({
@@ -102,7 +106,7 @@ export default {
     },
     //获取销售属性
     async getSpuSaleAttrList(){
-      const result = await this.$API.spu.getSpuSaleAttrList(this.spuId)
+      const result = await this.$API.spu.getSpuSaleAttrList(this.skuItem.id)
       if(result.code === 200){
         this.$message.success("获取销售属性成功")
         this.spuSaleAttrList = result.data
@@ -112,13 +116,70 @@ export default {
     },
     //获取图片列表
     async getSpuImg(){
-      const result = await this.$API.spu.getSpuImg(this.spuId)
+      const result = await this.$API.spu.getSpuImg(this.skuItem.id)
       if(result.code === 200){
         this.$message.success("获取图片列表成功")
         this.spuImgList = result.data
       }else{
         this.$message.error("获取图片列表失败")
       }
+    },
+    //选择图片
+    checkImg(imgList){
+      console.log(imgList)
+      this.sku.skuImageList = imgList
+    },
+    //设为默认
+    setDefault(row){
+      this.$set(row,"isDefault",true)
+      this.spuImgList = this.spuImgList.map((img)=>{
+        return {
+          ...img,
+          isDefault: img.id === row.id? true:false
+        }
+      })
+    },
+    save(){
+      /* 
+      {
+  "category3Id": 0, √
+  "id": 0, ×
+  "isSale": 0,
+  "price": 0, /
+  "skuAttrValueList": [ /
+    {
+      "attrId": 0,
+      "id": 0, ×
+      "skuId": 0, ×
+      "valueId": 0
+    }
+  ],
+  "skuDefaultImg": "string", /
+  "skuDesc": "string", /
+  "skuImageList": [ /
+    {
+      "id": 0, ×
+      "imgName": "string",
+      "imgUrl": "string",
+      "isDefault": "string",
+      "skuId": 0, ×
+      "spuImgId": 0
+    }
+  ],
+  "skuName": "string", /
+  "skuSaleAttrValueList": [ /
+    {
+      "id": 0, ×
+      "saleAttrValueId": 0,
+      "skuId": 0, ×
+      "spuId": 0
+    }
+  ],
+  "spuId": 0, skuItem.id
+  "tmId": 0, skuItem.tmId
+  "weight": "string" /
+}
+      */
     }
   },
   mounted() {
