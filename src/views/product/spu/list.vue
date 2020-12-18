@@ -9,7 +9,7 @@
         @closeUpdateList="closeUpdateList"
       ></SpuUpdateList>
     </div>
-    <skuList v-else></skuList>
+    <skuList v-else @closeSkuList="closeSkuList" :spuId="spuId"></skuList>
   </div>
 </template>
 
@@ -25,6 +25,7 @@ export default {
       isShow: true,
       isSpuShow: true,
       item: {},
+      spuId:""
     };
   },
   methods: {
@@ -35,9 +36,13 @@ export default {
     closeUpdateList() {
       this.isShow = true;
     },
-    showSkuList(){
+    showSkuList(row){
       this.isSpuShow = false
-    }
+      this.spuId = row.id
+    },
+    closeSkuList(){
+      this.isSpuShow = true
+    },
   },
   components: {
     Category,

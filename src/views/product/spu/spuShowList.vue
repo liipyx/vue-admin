@@ -19,7 +19,7 @@
               size="mini"
               type="primary"
               icon="el-icon-plus"
-              @click="$emit('showSkuList')"
+              @click="$emit('showSkuList',row)"
             ></el-button>
             <el-button
               size="mini"
