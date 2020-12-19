@@ -70,5 +70,12 @@ export default {
       method: `DELETE`,
       url:`${api_name}/deleteSpu/${spuId}`
     })
+  },
+  saveSku(sku) {
+    return request({
+      method: "POST",
+      url: `${api_name}/saveSkuInfo`,
+      data:sku
+    })
   }
 };
