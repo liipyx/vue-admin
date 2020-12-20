@@ -1,7 +1,10 @@
 import { constantRoutes, lastRoute } from '@/router'
-import { login as loginAPI} from '@/api'
+// import { login as loginAPI} from '@/api'
 import Layout from '@/layout'
 import asyncRoutes from '@/config/asyncRoutes'
+import API from "@/api"
+
+const loginAPI = API.login
 
 /*
 根据路由权限列表生成路由列表

@@ -1,6 +1,9 @@
-import { login as loginAPI } from '@/api'
+// import { login as loginAPI } from '@/api'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import { resetRouter } from '@/router'
+import API from "@/api"
+
+const loginAPI = API.login
 
 const getDefaultState = () => {
   return {
